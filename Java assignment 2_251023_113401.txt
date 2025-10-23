@@ -1,0 +1,230 @@
+package javaprj1; 
+import java.util.*;
+class Customer { 
+private int id; 
+private String name;
+public Customer(int id, String name) { 
+this.id = id;
+this.name = name;
+}
+public String getDetails() {
+return "Customer ID: " + id + ", Name: " + name;
+}
+}
+class Hub { 
+private int id;
+private String location;
+public Hub(int id, String location) { 
+this.id = id;
+this.location = location;
+}
+public String getDetails() {
+return "Hub ID: " + id + ", Location: " + location;
+}
+}
+class ScanEvent { 
+private Date date; 
+private Hub hub;
+public ScanEvent(Hub hub) { 
+this.date = new Date(); 
+this.hub = hub;
+}
+public String getDetails() {
+return "Scanned at " + hub.getDetails() + " on " + date;
+}
+}
+class DeliveryAttempt { 
+private Date date; 
+private String outcome;
+public DeliveryAttempt(String outcome) { 
+this.date = new Date();
+this.outcome = outcome;
+}
+public String getDetails() {
+return "Attempt: " + outcome + " on " + date;
+}
+public String getOutcome() { 
+return outcome;
+}
+}
+class ProofOfDelivery {
+private String confirmationCode;
+public ProofOfDelivery(String confirmationCode) { 
+this.confirmationCode = confirmationCode;
+}
+public String confirmDelivery() {
+return "Delivery confirmed with code: " + confirmationCode;
+}
+}
+class Parcel { 
+private int id;
+private String status;
+private List<String> history;
+public Parcel(int id) { 
+this.id = id;
+this.status = "Created"; 
+this.history = new ArrayList<>(); 
+history.add(status);
+}
+public int getId() {
+return id;
+}
+public void addScan(ScanEvent scan) { 
+status = "At Hub"; 
+history.add(scan.getDetails());
+}
+public void recordDeliveryAttempt(DeliveryAttempt attempt) { 
+history.add(attempt.getDetails());
+if (attempt.getOutcome().equalsIgnoreCase("Success")) { 
+status = "Delivered";
+} else {
+status = "Delivery Failed";
+}
+}
+public void recordProof(ProofOfDelivery pod) { 
+status = "Delivered Successfully"; 
+history.add(pod.confirmDelivery());
+}
+public String getStatus() {
+return "Parcel ID: " + id + ", Current Status: " + status;
+}
+public void printHistory() { 
+System.out.println("Timeline for Parcel " + id + ":"); 
+for (String event : history) {
+System.out.println(" - " + event);
+}
+}
+public boolean isDelivered() {
+return status.contains("Delivered");
+}
+}
+class Shipment { 
+private int id;
+private List<Parcel> parcels; 
+private boolean isClosed;
+public Shipment(int id) { 
+this.id = id;
+this.parcels = new ArrayList<>(); 
+this.isClosed = false;
+}
+public void addParcel(Parcel p) { 
+parcels.add(p);
+}
+public void closeShipment() { 
+for (Parcel p : parcels) {
+if (!p.isDelivered()) {
+System.out.println("Shipment cannot be closed, pending parcels exist."); 
+return;
+}
+}
+isClosed = true;
+System.out.println("Shipment closed successfully!");
+}
+public void getSummary() {
+System.out.println("Shipment ID: " + id + " | Closed: " + isClosed); 
+for (Parcel p : parcels) {
+System.out.println(p.getStatus());
+}
+}
+}
+public class LogisticsApp {
+public static void main(String[] args) { 
+Scanner sc = new Scanner(System.in); 
+List<Parcel> parcels = new ArrayList<>();
+List<Shipment> shipments = new ArrayList<>(); 
+List<Hub> hubs = new ArrayList<>();
+while (true) {
+System.out.println("\n--- Logistics System ---"); 
+System.out.println("1. Create Parcel"); 
+System.out.println("2. Create Shipment"); 
+System.out.println("3. Add Hub"); 
+System.out.println("4. Record Scan"); 
+System.out.println("5. Record Delivery Attempt"); 
+System.out.println("6. Show Parcel Status"); 
+System.out.println("7. Close Shipment"); 
+System.out.println("8. Exit"); 
+System.out.print("Enter choice: ");
+int ch = sc.nextInt();
+switch (ch) { 
+case 1:
+System.out.print("Enter Parcel ID: "); 
+int pid = sc.nextInt();
+Parcel p = new Parcel(pid); 
+parcels.add(p); 
+System.out.println("Parcel Created!"); 
+break;
+case 2:
+System.out.print("Enter Shipment ID: "); 
+int sid = sc.nextInt();
+Shipment s = new Shipment(sid); 
+shipments.add(s); 
+System.out.println("Shipment Created!"); 
+break;
+case 3:
+System.out.print("Enter Hub ID: "); 
+int hid = sc.nextInt();
+sc.nextLine();
+System.out.print("Enter Hub Location: "); 
+String loc = sc.nextLine();
+hubs.add(new Hub(hid, loc)); 
+System.out.println("Hub Added!"); 
+break;
+case 4:
+if (parcels.isEmpty() || hubs.isEmpty()) { 
+System.out.println("Need parcels and hubs first."); 
+break;
+}
+System.out.print("Enter Parcel ID: "); 
+int pid4 = sc.nextInt();
+Parcel parcel4 = parcels.stream()
+.filter(pp -> pp.getId() == pid4)
+.findFirst()
+.orElse(null);
+if (parcel4 != null) {
+Hub hub4 = hubs.get(0); // just pick first hub 
+ScanEvent se = new ScanEvent(hub4); 
+parcel4.addScan(se); 
+System.out.println("Scan Recorded!");
+} else {
+System.out.println("Parcel not found!");
+}
+break; 
+case 5:
+System.out.print("Enter Parcel ID: "); 
+int pid5 = sc.nextInt();
+sc.nextLine();
+System.out.print("Enter Outcome (Success/Failed): "); 
+String outcome = sc.nextLine();
+for (Parcel pp : parcels) { 
+if (pp.getId() == pid5) {
+DeliveryAttempt da = new DeliveryAttempt(outcome); 
+pp.recordDeliveryAttempt(da);
+if (outcome.equalsIgnoreCase("Success")) {
+ProofOfDelivery pod = new ProofOfDelivery("CODE123"); 
+pp.recordProof(pod);
+}
+}
+}
+break; 
+case 6:
+for (Parcel pp : parcels) { 
+System.out.println(pp.getStatus()); 
+pp.printHistory();
+}
+break; 
+case 7:
+for (Shipment ss : shipments) { 
+ss.closeShipment(); 
+ss.getSummary();
+}
+break; 
+case 8:
+System.out.println("Exiting..."); 
+sc.close();
+return; 
+default:
+System.out.println("Invalid choice!");
+}
+}
+}
+}
